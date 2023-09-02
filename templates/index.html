@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps Converter</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+<div class="container mt-5">
+    <h2 class="mb-4">Google Maps Converter</h2>
+    <div class="form-group">
+        <label for="conversionType">Conversion Type:</label>
+        <select class="form-control" id="conversionType">
+            <option value="1">Address to Lat-Lng</option>
+            <option value="2">Lat-Lng to Address</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="input">Input:</label>
+        <input type="text" class="form-control" id="input" placeholder="Enter address or lat-lng...">
+    </div>
+    <button class="btn btn-primary" onclick="convert()">Convert</button>
+    <div class="mt-4" id="result"></div>
+</div>
+
+<script>
+    function convert() {
+        let direction = $("#conversionType").val();
+        let input = $("#input").val();
+        let payload = {"direction": direction};
+
+        if (direction === "1") {
+            payload["input"] = input;
+        } else {
+            let [lat, lng] = input.split(",");
+            payload["lat"] = parseFloat(lat.trim());
+            payload["lng"] = parseFloat(lng.trim());
+        }
+
+        $.ajax({
+            url: "/convert",
+            type: "POST",
+            data: JSON.stringify(payload),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function(data) {
+                if (direction === "1") {
+                    $("#result").html("Coordinates: Latitude = " + data.lat + ", Longitude = " + data.lng);
+                } else {
+                    $("#result").html("Address: " + data.address);
+                }
+            }
+        });
+
+    }
+</script>
+</body>
+</html>
