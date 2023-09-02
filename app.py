@@ -1,9 +1,11 @@
 from flask import Flask, render_template, request, jsonify
 import requests
+import os
 
 app = Flask(__name__)
 
-API_KEY = "AIzaSyAbpX_8rGEIuyiVGxTqbsvjVBqq8RsQjHI"
+# set API_KEY with 'export GOOGLE_MAPS_API_KEY=""'
+API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY')
 
 @app.route("/")
 def index():
