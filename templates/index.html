@@ -16,8 +16,9 @@
         <div class="form-group">
             <label for="conversionType">Conversion Type:</label>
             <select class="form-control" id="conversionType">
-                <option value="1">Address to Lat-Lng</option>
-                <option value="2">Lat-Lng to Address</option>
+                <option value="addressToLatLng">Address to Lat-Lng</option>
+                <option value="latLngToAddress">Lat-Lng to Address</option>
+                <option value="getBoundingBox">Get Bounding Box</option>
             </select>
         </div>
         <div class="form-group">
@@ -31,15 +32,28 @@
     <div id="error-message" class="alert alert-danger mt-4" role="alert" style="display: none; width: 50%; margin-left: 25%;"></div>
 
     <script>
+
+        function displayResult(resultText) {
+            $("#result").html(resultText);
+        }
+
+        function displayErrorMessage(errorMessage) {
+            $("#error-message").text(errorMessage).show();
+        }
+
         function convert() {
             $("#error-message").hide();
-            let direction = $("#conversionType").val();
+            let action = $("#conversionType").val();
             let input = $("#input").val().trim();
-            let payload = { "direction": direction };
+            let payload = { "action": action };
 
-            if (direction === "1") {
+            if (!input) {
+                displayErrorMessage("Please provide input.");
+            }
+
+            if (action === "addressToLatLng") {
                 payload["input"] = input;
-            } else {
+            } else if (action == "latLngToAddress") {
                 if (!input.includes(',')) {
                     $("#error-message").text("Please provide a valid Lat-Lng pair separated by a comma.").show();
                     return;
@@ -47,19 +61,47 @@
                 let [lat, lng] = input.split(",");
                 payload["lat"] = parseFloat(lat.trim());
                 payload["lng"] = parseFloat(lng.trim());
+            } else if (action == "getBoundingBox") {
+                payload["city"] = input
             }
 
-            $.ajax({
+            if (action === "getBoundingBox") {
+                $.ajax({
+                    url: "/bounding_box",
+                    type: "POST",
+                    data: JSON.stringify({ "city": input }),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (data) {
+                        displayResult(
+                            `Bounding Box: Northeast Lat = ${data.NORTHEAST_LAT}, 
+                            Northeast Lng = ${data.NORTHEAST_LNG}, 
+                            Southwest Lat = ${data.SOUTHWEST_LAT}, 
+                            Southwest Lng = ${data.SOUTHWEST_LNG}`
+                        );
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        let errorMessage = "An error occurred: ";
+                        if (jqXHR.responseJSON && jqXHR.responseJSON.error) {
+                            errorMessage += jqXHR.responseJSON.error;
+                        } else {
+                            errorMessage += textStatus;
+                        }
+                        displayErrorMessage(errorMessage);
+                    }
+                });
+            } else {
+                $.ajax({
                 url: "/convert",
                 type: "POST",
                 data: JSON.stringify(payload),
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function(data) {
-                    if (direction === "1") {
-                        $("#result").html("Coordinates: Latitude = " + data.lat + ", Longitude = " + data.lng);
-                    } else {
-                        $("#result").html("Address: " + data.address);
+                    if (action === "addressToLatLng") {
+                        displayResult("Coordinates: Latitude = " + data.lat + ", Longitude = " + data.lng);
+                    } else if (action == "latLngToAddress") {
+                        displayResult("Address: " + data.address);
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
@@ -69,9 +111,11 @@
                     } else {
                         errorMessage += textStatus;
                     }
-                    $("#error-message").text(errorMessage).show();
+                    displayErrorMessage(errorMessage);
                 }
-            });
+                });
+            }
+
         }
     </script>
 </body>
