@@ -85,11 +85,12 @@ function convertBoundingBox(payload) {
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (data) {
+            let grid = getGridFromBox(data.NORTHEAST_LAT, data.NORTHEAST_LNG, data.SOUTHWEST_LAT, data.SOUTHWEST_LNG, 5);
             displayResult(
                 `Bounding Box: Northeast Lat = ${data.NORTHEAST_LAT}, 
                 Northeast Lng = ${data.NORTHEAST_LNG}, 
                 Southwest Lat = ${data.SOUTHWEST_LAT}, 
-                Southwest Lng = ${data.SOUTHWEST_LNG}`
+                Southwest Lng = ${data.SOUTHWEST_LNG}\n\n${grid}`
             );
         },
         error: function (jqXHR, textStatus, errorThrown) {
@@ -102,4 +103,19 @@ function convertBoundingBox(payload) {
             displayErrorMessage(errorMessage);
         }
     });
+}
+
+function getGridFromBox(NORTHEAST_LAT, NORTHEAST_LNG, SOUTHWEST_LAT, SOUTHWEST_LNG, DESIRED_GRID_LENGTH) {
+    let output = '';
+    let epsilon = 0.0000001;
+    let intermediate_grid_length = DESIRED_GRID_LENGTH - 1;
+    let lat_step_size = ( NORTHEAST_LAT - SOUTHWEST_LAT ) / intermediate_grid_length;
+    let lng_step_size = ( NORTHEAST_LNG - SOUTHWEST_LNG ) / intermediate_grid_length;
+
+    for (let lat = SOUTHWEST_LAT; lat <= NORTHEAST_LAT + epsilon; lat += lat_step_size) {
+        for (let lng = SOUTHWEST_LNG; lng <= NORTHEAST_LNG + epsilon; lng += lng_step_size) {
+            output += lat + ',' + lng + '\n';
+        }
+    }
+    return output;
 }

@@ -36,7 +36,7 @@ def get_city_bounding_box(city_name):
             NORTHEAST_LNG = lng + buffer
             SOUTHWEST_LAT = lat - buffer
             SOUTHWEST_LNG = lng - buffer
-            
+
             return {
                 "NORTHEAST_LAT": NORTHEAST_LAT,
                 "NORTHEAST_LNG": NORTHEAST_LNG,
